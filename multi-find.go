@@ -16,13 +16,12 @@ import (
 	"runtime"
 )
 
-func process(directory string, searchTerm string, output chan string) {
+func process(directory string, searchTerm string, output chan []byte) {
 	out, err := exec.Command("find", directory, "-type", "f", "-iname", searchTerm).Output()
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Find error: %s", err))
 	}
-	// TODO: Send bytes, convert on print out to screen
-	output <- string(out)
+	output <- out
 }
 
 func main() {
@@ -36,7 +35,7 @@ func main() {
 	searchTerms := flag.Args()
 
 	input := make(chan string, len(searchTerms))
-	output := make(chan string, len(searchTerms))
+	output := make(chan []byte, len(searchTerms))
 	
 	for _, term := range searchTerms {
 		input <- term
@@ -46,7 +45,7 @@ func main() {
 
 	for searchTerm := range input {
 		go process(*dirPtr, searchTerm, output)
-		fmt.Println(<-output)
+		fmt.Println(string(<-output))
 	}
 }
 
